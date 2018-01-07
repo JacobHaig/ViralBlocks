@@ -1,0 +1,11 @@
+{
+    "name": "ViralBlocks",
+    "description": "ViralBlocks is a mod for Minetest.",
+    "homepage": "http://mesecons.net",
+    "authors": "Wisward, Adroit",
+    "license": "LGPL-3.0+",
+    "keywords": [
+        "minetest",
+        "mod"
+    ]
+}
