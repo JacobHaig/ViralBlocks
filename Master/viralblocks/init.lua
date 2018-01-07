@@ -26,7 +26,7 @@ minetest.register_abm({
 
 
       surround_count = checkadjacent(pos)
-      minetest.chat_send_all("found " .. surround_count)
+      -- minetest.chat_send_all("found " .. surround_count)
       if surround_count < 2 or surround_count > 3 then
          minetest.set_node(pos, {name="air"})
          return
