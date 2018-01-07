@@ -1,0 +1,1 @@
+Blocks that spread like a virus when placed, or die,  according to the rules of Conway's "Game of Life"
