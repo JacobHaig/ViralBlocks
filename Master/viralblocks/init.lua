@@ -124,8 +124,6 @@ function findAirNeighbors()
             if vector.equals(pos, posOffset) then -- make sure it's not already in there
               alreadyAdded = true
             end
-
-            --if countLifeNeighbors(pos) > 3 ?????
           end
           if not alreadyAdded then
             table.insert(airNeighborsList, posOffset)
@@ -137,6 +135,8 @@ function findAirNeighbors()
     end
   end
 end
+
+-- THESE COMMENTS NEED TO BE REMOVED
 
 
 -- -- If any of the airNeighborsList have 0 neighbors remove them
@@ -201,7 +201,7 @@ end
 -- Creating the lifeBlock
 minetest.register_node(lifeBlock, {
   description = "Populated (Alive) Cell of Conway's Game of Life",
-  tiles = {"WiswardsMod_virus.png"},
+  tiles = {"ViralBlocks_LifeBlock.png"},
   groups = {cracky= 3, oddly_breakable_by_hand= 2, flammable= 3},
   --sounds = default.node_sounds_defaults(),
 })
@@ -219,7 +219,7 @@ end)
 
 -- Onload, Find all lifeBlocks and add them
 minetest.register_lbm({
-	name = "viralblocks:countblocks",
+	name = "viralblocks:countblocks", -- countblocks is a dummy
 	nodenames = {lifeBlock},
   run_at_every_load = true,
 	action = function(pos, node)
