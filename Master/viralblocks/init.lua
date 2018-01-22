@@ -32,30 +32,27 @@ blocksToDie = {}
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-
 -- THE MAIN LOOP
 local timer = 0
 local gen = 0
 minetest.register_globalstep(function(dtime)
   if not paused then
-	   timer = timer + dtime;
-	    if timer >= DELAY_SECONDS then -- Every n seconds do stuff
-
-        findAirNeighbors()
-        --removeAdjacentBlocks()
-
-        findBlocksToBeBorn()
-        findBlocksToDie()
-
-        if not (tableLength(blocksToBeBorn) == 0 or tableLength(blocksToDie) == 0) then
-          say("Pass " .. gen)
-          nextGeneration()
-
-          gen = gen + 1
-        end
-
-        timer = 0
-	    end
+    timer = timer + dtime;
+			
+    if timer >= DELAY_SECONDS then -- Every n seconds do stuff
+      findAirNeighbors()
+      --removeAdjacentBlocks()
+      findBlocksToBeBorn()
+      findBlocksToDie()
+		
+      if not (tableLength(blocksToBeBorn) == 0 or tableLength(blocksToDie) == 0) then
+        say("Pass " .. gen)
+        nextGeneration()
+        gen = gen + 1
+      end
+      timer = 0
+    end
+			
   end
 end)
 
@@ -99,14 +96,15 @@ end
 -- Set LifeBlocks for Removal
 function findBlocksToDie()
   for k, pos in pairs(lifeBlocks) do
+		
     -- Checks for two or three live neighbors - if not, mark for removal
     count = countLifeNeighbors(pos)
     if count < 2 or count > 3 then
       table.insert(blocksToDie, pos)
     end
+		
   end
 end
-
 
 
 -- Adds findAirNeighbors to the lifeBlocks
@@ -115,6 +113,7 @@ function findAirNeighbors()
   for k, pos in pairs(lifeBlocks) do
     for z_offset= -1, 1 do --Loop through Z
       for x_offset= -1, 1 do --Loop through X
+				
         local posOffset = {x= pos.x + x_offset, y= pos.y, z= pos.z + z_offset}
         local node = minetest.get_node(posOffset)
         -- in this loop is all neighbors
@@ -136,62 +135,19 @@ function findAirNeighbors()
   end
 end
 
--- THESE COMMENTS NEED TO BE REMOVED
-
-
--- -- If any of the airNeighborsList have 0 neighbors remove them
--- function removeAdjacentBlocks()
---   for k, pos in pairs(airNeighborsList) do
---     -- If there is already a lifeBlock here
---     local node = minetest.get_node(pos)
---     -- If the block has 0 neighbors
---     if countLifeNeighbors(pos) == 0 then
---       table.remove(airNeighborsList, k)
---     end
---   end
--- end
-
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- Remove lifeBlocks from lifeBlocks table
--- -- Place the living blocks
--- function livePlacement()
---   for k, pos in pairs(airNeighborsList) do
---     if countLifeNeighbors(pos) == 3 then
---       table.insert(lifeBlocks, pos)
---       minetest.set_node(pos, {name= lifeBlock})
---     end
---   end
--- end
-
--- -- Adds blocks top be removed to array then deletes them
--- function checklifeBlock()
---   -- Add blocks that want to be added to the list
---   for k,pos in pairs(lifeBlocks) do
---     surround_count = countLifeNeighbors(pos)
---     if surround_count < 2 or surround_count > 3 then
---        table.insert(blocksToBeBorn, pos)
---     end
---   end
---   -- Remove all blocks
---   for k,pos in pairs(blocksToBeBorn) do
---     minetest.set_node(pos, {name= "air"})
---     removeLifeBlock(pos)
---   end
--- end
-
 
 -- Returns the number of adjectent lifeBlocks
 function countLifeNeighbors(pos)
   local surround_count = 0
   for z_offset= -1, 1 do --Loop through Z
      for x_offset= -1, 1 do --Loop through X
+			
         local newpos = {x= pos.x + x_offset, y= pos.y, z= pos.z + z_offset}
         local node = minetest.get_node(newpos)
         if not (x_offset == 0 and z_offset == 0) and node.name == lifeBlock then --Rule out the center block itself
           surround_count = surround_count + 1
         end
+			
      end
   end
   return surround_count
@@ -221,7 +177,7 @@ end)
 minetest.register_lbm({
 	name = "viralblocks:countblocks", -- countblocks is a dummy
 	nodenames = {lifeBlock},
-  run_at_every_load = true,
+  	run_at_every_load = true,
 	action = function(pos, node)
 		table.insert(lifeBlocks, pos)
 	end,
