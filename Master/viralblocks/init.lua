@@ -27,6 +27,8 @@ paused = false
 -- Debug -----------------------------------------------------------------------
 visDebug = false
 showingLife = false
+nextGeneration = true
+STEP = true -- false for debuging
 
 --------------------------------------------------------------------------------
 -- Lists -----------------------------------------------------------------------
@@ -47,25 +49,54 @@ minetest.register_globalstep(
     if not paused then
       timer = timer + dtime
 
-      if timer >= DELAY_SECONDS then -- Every n seconds do stuff
-        debugView(visDebug, showingLife)
-
+      if timer >= DELAY_SECONDS and STEP then -- Every n seconds do stuff
+        
+        if nextGeneration then
+          placeBlocksToBeBorn()
+          removeBlocksToDie()
+        end
+        
         findAirNeighbors()
-        --removeAdjacentBlocks()
         findBlocksToBeBorn()
         findBlocksToDie()
 
+
         -- if not (tableLength(blocksToBeBorn) == 0 or tableLength(blocksToDie) == 0) then
         -- say("Pass " .. gen)
-        -- nextGeneration()
+        --nextGeneration()
         -- gen = gen + 1
         -- end
-
+        
+        STEP = true -- false for debuging
         timer = 0
       end
     end
   end
 )
+
+function placeBlocksToBeBorn()
+  for k, pos in pairs(blocksToBeBorn) do
+    -- Here, We need to place all of the blocks that we have queued
+    minetest.set_node(pos, {name = lifeBlock})
+    -- And add those blocks positions to lifeBlocks
+    table.insert(lifeBlocks, pos)
+  end
+  -- We also need to empty the blocksToBeBorn when done
+  blocksToBeBorn = {}
+end
+
+-- Place the LifeBlocks
+function removeBlocksToDie()
+  -- Remove the LifeBlocks
+  for k, pos in pairs(blocksToDie) do
+    -- remove lifeBlocks from list
+    table.remove(lifeBlocks, k)
+    -- Finally, We can remove the marked positions from the world
+    minetest.set_node(pos, {name = "air"})
+  end
+  -- And remove them from the list
+  blocksToDie = {}
+end
 
 -- Set the LifeBlocks
 function findBlocksToBeBorn()
@@ -74,29 +105,6 @@ function findBlocksToBeBorn()
       -- Add blocks with exactly three live neighbors to blocksToBeBorn
       table.insert(blocksToBeBorn, pos)
     end
-  end
-end
-
--- Place the LifeBlocks
-function nextGeneration()
-  for k, pos in pairs(blocksToBeBorn) do
-    -- Here, We need to place all of the blocks that we have queued
-    minetest.set_node(pos, {name = lifeBlock})
-    -- We also need to empty the blocksToBeBorn when done
-    table.remove(blocksToBeBorn, k)
-    -- And add those blocks positions to lifeBlocks
-    table.insert(lifeBlocks, pos)
-  end
-
-  -- Remove the LifeBlocks
-  for k, pos in pairs(blocksToDie) do
-    -- Finally, We can remove the marked positions
-    minetest.set_node(pos, {name = "air"})
-    -- And remove them from the list
-    table.remove(blocksToDie, k)
-  end
-  for k, pos in pairs(lifeBlocks) do
-    table.remove(lifeBlocks, k)
   end
 end
 
@@ -137,20 +145,6 @@ function findAirNeighbors()
   end
 end
 
--- Returns the number of adjectent lifeBlocks
-function countLifeNeighbors(pos)
-  local surround_count = 0
-  for z_offset = -1, 1 do --Loop through Z
-    for x_offset = -1, 1 do --Loop through X
-      local newpos = {x = pos.x + x_offset, y = pos.y, z = pos.z + z_offset}
-      local node = minetest.get_node(newpos)
-      if not (x_offset == 0 and z_offset == 0) and node.name == lifeBlock then --Rule out the center block itself
-        surround_count = surround_count + 1
-      end
-    end
-  end
-  return surround_count
-end
 
 -- Creating the lifeBlock
 minetest.register_node(
@@ -204,22 +198,27 @@ minetest.register_on_dignode(
 minetest.register_on_chat_message(
   function(name, message)
     if message == "debug" then
-      visDebug = (not visDebug)
-      say("Visual Debug: " .. isitTrue(visDebug))
+      findAirNeighbors()
+      findBlocksToBeBorn()
+      findBlocksToDie()
+      debugView(true, showingLife) -- you should "pauselife" to see this
+      say("Visual Debug: " .. "Done")
     elseif message == "showlife" then
       showingLife = (not showingLife)
       say("Showing Life: " .. isitTrue(showingLife))
+    elseif message == "step" then
+      STEP = true
+      debugView(true, showingLife)
+      say("STEPING : " .. "DONE")
     elseif message == "pauselife" then
       paused = true
       say("CGOL board paused globally!")
     elseif message == "resumelife" then
       paused = false
       say("CGOL board resumed globally!")
-    elseif message == "fill" then
-      findAirNeighbors()
-      glassify()
+    elseif message == "info" then
       showInfo()
-      say("Visualizing cell surroundings...")
+    ---say("Visualizing cell surroundings...")
     end
   end
 )

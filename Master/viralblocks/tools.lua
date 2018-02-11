@@ -16,6 +16,22 @@ function showInfo()
   say("airNeighborsList: " .. tostring(tableLength(airNeighborsList)))
 end
 
+
+-- Returns the number of adjectent lifeBlocks
+function countLifeNeighbors(pos)
+  local surround_count = 0
+  for z_offset = -1, 1 do --Loop through Z
+    for x_offset = -1, 1 do --Loop through X
+      local newpos = {x = pos.x + x_offset, y = pos.y, z = pos.z + z_offset}
+      local node = minetest.get_node(newpos)
+      if not (x_offset == 0 and z_offset == 0) and node.name == lifeBlock then --Rule out the center block itself
+        surround_count = surround_count + 1
+      end
+    end
+  end
+  return surround_count
+end
+
 -- Turns all adjectent blocks to glass
 function glassify()
   for k, adjPos in pairs(airNeighborsList) do
