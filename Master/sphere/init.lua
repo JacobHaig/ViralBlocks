@@ -16,6 +16,7 @@ minetest.register_node("sphere:earth", {
 	sounds = default.node_sound_wood_defaults(),
 	selection_box = spherebox,
 	collision_box = spherebox,
+	
 })
 
 
