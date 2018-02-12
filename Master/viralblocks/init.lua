@@ -25,7 +25,7 @@ local tools = dofile(minetest.get_modpath("viralblocks") .. "/tools.lua")
 -- CONSTANTs -------------------------------------------------------------------
 
 LIFEBLOCK = "viralblocks:lifeblock"
-DELAY_SECONDS = 2
+DELAY_SECONDS = 3
 
 
 --------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ isPaused = false
 visDebug = false
 showingLife = false
 makeChanges = true
-DEBUG_TAGS = {passes = true, no_action = true, born = true}
+DEBUG_TAGS = {passes = true, no_action = true, born = false}
 
 
 --------------------------------------------------------------------------------
