@@ -67,8 +67,6 @@ minetest.register_globalstep(
 
         timer = 0
       end
-    else
-      debugView(visDebug, showingLife)
     end
   end
 )
@@ -93,8 +91,8 @@ function nextGeneration()
   else
     log("no_action", "Nothing to do!")
   end
-
   gen = gen + 1
+  debugView(visDebug, showingLife)
 end
 
 
