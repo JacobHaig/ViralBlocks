@@ -21,10 +21,11 @@ local tools = dofile(minetest.get_modpath("viralblocks") .. "/tools.lua")
 -- showInfo = tools.showInfo
 -- glassify = tools.glassify
 
-
+--------------------------------------------------------------------------------
+-- CONSTANTs -------------------------------------------------------------------
 
 LIFEBLOCK = "viralblocks:lifeblock"
-DELAY_SECONDS = 5
+DELAY_SECONDS = 2
 
 
 --------------------------------------------------------------------------------
@@ -33,8 +34,8 @@ isPaused = false
 visDebug = false
 showingLife = false
 makeChanges = true
-STEP = true -- false for debugging
-DEBUG_TAGS = {passes = true, no_action = true}
+DEBUG_TAGS = {passes = true, no_action = true, born = true}
+
 
 --------------------------------------------------------------------------------
 -- Lists -----------------------------------------------------------------------
@@ -48,6 +49,7 @@ blocksToDie = {}
 --------------------------------------------------------------------------------
 
 -- TODO make everything local, lol
+-- TODO burn everything to the ground
 
 -- THE MAIN LOOP, automatic
 local timer = 0
@@ -62,7 +64,6 @@ minetest.register_globalstep(
           nextGeneration()
         end
 
-        STEP = true -- false for debuging
         timer = 0
       end
     end
@@ -75,20 +76,25 @@ function nextGeneration()
 
   --first do harmless counting, no changes to the world.
   --This comes first because we want the most up-to-date lists before making changes
+
   findAirNeighbors()
   numBlocksToBeBorn = findBlocksToBeBorn()
   numBlocksToDie = findBlocksToDie()
+
   log("passes", "Scanning gen ".. gen ..". Pop:" .. tableLength(lifeBlocks) .. ", Change: (+" .. numBlocksToBeBorn.. ", -" .. numBlocksToDie .. ")")
 
   -- then do changes to world, if enabled
   if numBlocksToBeBorn + numBlocksToDie > 0 and makeChanges then
-      placeBlocksToBeBorn()
-      -- removeBlocksToDie()
+    placeBlocksToBeBorn()
+    removeBlocksToDie()
   else
-    log("no-action", "Nothing to do!")
+    log("no_action", "Nothing to do!")
+    debugView(visDebug, showingLife)
   end
+
   gen = gen + 1
 end
+
 
 -- manually increment the system, called by /life nextgen
 function manualAdvance()
@@ -99,6 +105,8 @@ function manualAdvance()
   nextGeneration()
 end
 
+
+-- Place LifeBlocks to be born then empty the list
 function placeBlocksToBeBorn()
   for k, pos in pairs(blocksToBeBorn) do
     -- Here, We need to place all of the blocks that we have queued
@@ -110,7 +118,8 @@ function placeBlocksToBeBorn()
   blocksToBeBorn = {}
 end
 
--- Place the LifeBlocks
+
+-- Remove the LifeBlocks then empty the list
 function removeBlocksToDie()
   -- Remove the LifeBlocks
   for k, pos in pairs(blocksToDie) do
@@ -123,34 +132,37 @@ function removeBlocksToDie()
   blocksToDie = {}
 end
 
+
 -- Set the LifeBlocks
 function findBlocksToBeBorn()
-  local found = 0
+  local numberFound = 0
   for k, pos in pairs(airNeighborsList) do
     if countLifeNeighbors(pos) == 3 then
+      log("born", "Found three neighbors!")
       -- Add blocks with exactly three live neighbors to blocksToBeBorn
       table.insert(blocksToBeBorn, pos)
-      found = found + 1
+      numberFound = numberFound + 1
     end
   end
-  return found
+  return numberFound
 end
 
--- TODO merge findBlocksToDie() with findAirNeighbors for efficiency, same loop: pairs(lifeBlocks)
 
+-- TODO merge findBlocksToDie() with findAirNeighbors for efficiency, same loop: pairs(lifeBlocks)
 -- Set LifeBlocks for Removal
 function findBlocksToDie()
-  local found = 0
+  local numberFound = 0
   for k, pos in pairs(lifeBlocks) do
     -- Checks for two or three live neighbors - if not, mark for removal
     count = countLifeNeighbors(pos)
     if count < 2 or count > 3 then
       table.insert(blocksToDie, pos)
-      found = found + 1
+      numberFound = numberFound + 1
     end
   end
-  return found
+  return numberFound
 end
+
 
 -- Adds any Neighboring air nodes to the lifeBlocks
 function findAirNeighbors()
@@ -179,6 +191,25 @@ function findAirNeighbors()
 end
 
 
+-- Returns the number of adjectent lifeBlocks
+function countLifeNeighbors(pos)
+  local surround_count = 0
+  for z_offset = -1, 1 do --Loop through Z
+    for x_offset = -1, 1 do --Loop through X
+      local newpos = {x = pos.x + x_offset, y = pos.y, z = pos.z + z_offset}
+      local node = minetest.get_node(newpos)
+      if not (x_offset == 0 and z_offset == 0) and node.name == LIFEBLOCK then --Rule out the center block itself
+        surround_count = surround_count + 1
+      end
+    end
+  end
+  return surround_count
+end
+
+
+--------------------------------------------------------------------------------
+-- API stuff -------------------------------------------------------------------
+
 -- Creating the lifeBlock
 minetest.register_node(
   LIFEBLOCK,
@@ -186,9 +217,9 @@ minetest.register_node(
     description = "Populated (Alive) Cell of Conway's Game of Life",
     tiles = {"ViralBlocks_LifeBlock.png"},
     groups = {cracky = 3, oddly_breakable_by_hand = 2, flammable = 3}
-    --sounds = default.node_sounds_defaults(),
   }
 )
+
 
 -- Event that adds lifeBlocks to table on placements of lifeBlocks
 minetest.register_on_placenode(
@@ -197,38 +228,38 @@ minetest.register_on_placenode(
       table.insert(lifeBlocks, pos)
       local meta = minetest.get_meta(pos)
       meta:set_string("infotext", "LifeBlock placed by player")
-    -- placer:get_player_name()
     end
   end
 )
+
 
 -- Onload, Find all lifeBlocks and add them
 minetest.register_lbm(
   {
     label = "Count existing lifeblocks",
---  ^ Descriptive label for profiling purposes (optional).
+    --  ^ Descriptive label for profiling purposes (optional).
     name = "viralblocks:countblocks", -- countblocks is a dummy (a: huh? this is our LBM's name)
     nodenames = {LIFEBLOCK},
     run_at_every_load = true,
---  ^ Whether to run the LBM's action every time a block gets loaded,
---    and not just for blocks that were saved last time before LBMs were
---    introduced to the world. (>Adroit says: huh?)
+    --  ^ Whether to run the LBM's action every time a block gets loaded,
+    --    and not just for blocks that were saved last time before LBMs were
+    --    introduced to the world. (>Adroit says: huh?)
     action = function(pos, node)  -- runs once per preexisting lifeblock
       table.insert(lifeBlocks, pos)
-      say("Adding preexisting lifeblock")
+      say("Adding pre-existing lifeblock")
     end
   }
 )
 
+
 -- If destroyed remove pos from lifeBlocks
--- >adroit says: What if it's destroyed by a non-player?
+-- TODO What if it's destroyed by a non-player?
 minetest.register_on_dignode(
   function(pos, oldnode, digger)
     if oldnode.name == LIFEBLOCK then
       for k, v in pairs(lifeBlocks) do
         if v.x == pos.x and v.y == pos.y and v.z == pos.z then
           table.remove(lifeBlocks, k)
-          findAirNeighbors()
         end
       end
     end
@@ -236,41 +267,39 @@ minetest.register_on_dignode(
 )
 
 
--- Main command
+-- Main command handler
 minetest.register_chatcommand("life",
 {
-    params = "<step|pause|resume|show|debug>", -- Short parameter description
+    params = "<pause|resume|show|debug>", -- Short parameter description
     description = "Debugging commands for ViralBlocks", -- Full description
-    privs = {privs=true}, -- Require the "privs" privilege to run
-    func = function(name, param)  -- Called when command is run.
+    privs = {privs=true},           -- Require the "privs" privilege to run
+    func = function(name, param)    -- Called when command is run.
              commandResponse(name, param)
-           end                    -- Returns boolean success and text output.
+           end                      -- Returns boolean success and text output.
 })
 
 
--- Respond to specific chats
+-- Respond to specific chat commands
 function commandResponse(name, param)
     if param == "debug" then
-      findAirNeighbors()
-      findBlocksToBeBorn()
-      findBlocksToDie()
-      debugView(true, showingLife) -- you should "pauselife" to see this
-      say("Visual Debug: " .. "Done")
+      visDebug = not visDebug
+      say("Visual Debug: " .. dump(visDebug))
+
     elseif param == "show" then
-      showingLife = (not showingLife)
-      say("Showing Life: " .. isitTrue(showingLife))
-    elseif param == "step" then
-      STEP = true
-      debugView(true, showingLife)
-      say("STEPPING : " .. "DONE")
+      showingLife = not showingLife
+      say("Showing Life: " .. dump(showingLife))
+
     elseif param == "nextgen" then
       manualAdvance()
+
     elseif param == "pause" then
       isPaused = true
       say("CGOL board paused globally!")
+
     elseif param == "resume" then
       isPaused = false
       say("CGOL board resumed globally!")
+
     elseif param == "info" then
       showInfo()
     ---say("Visualizing cell surroundings...")
