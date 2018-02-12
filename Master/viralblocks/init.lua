@@ -62,11 +62,13 @@ minetest.register_globalstep(
 
         if tableLength(lifeBlocks) ~= 0 then  -- TODO: make isTableEmpty() so we don't inefficiently count past one
           nextGeneration()
-          debugView(visDebug, showingLife)
+
         end
 
         timer = 0
       end
+    else
+      debugView(visDebug, showingLife)
     end
   end
 )
