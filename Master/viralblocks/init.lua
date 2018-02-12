@@ -19,12 +19,15 @@ local tools = dofile(minetest.get_modpath("viralblocks") .. "/tools.lua")
 -- showInfo = tools.showInfo
 -- glassify = tools.glassify
 
-lifeBlock = "viralblocks:lifeblock"
+
+--constants
+LIFEBLOCK = "viralblocks:lifeblock"
 DELAY_SECONDS = 5
-paused = false
+
 
 --------------------------------------------------------------------------------
 -- Debug -----------------------------------------------------------------------
+isPaused = false
 visDebug = false
 showingLife = false
 makeChanges = true
@@ -47,7 +50,7 @@ local timer = 0
 local gen = 0
 minetest.register_globalstep(
   function(dtime)
-    if not paused then
+    if not isPaused then
       timer = timer + dtime
       if timer >= DELAY_SECONDS then -- Every n seconds do stuff
 
@@ -84,7 +87,7 @@ end
 
 -- manually increment the system, called by /life nextgen
 function manualAdvance()
-  if not paused then
+  if not isPaused then
     say("Warning: manually advancing while the board is not paused!")
   end
   say("Advancing one generation only:")
@@ -94,7 +97,7 @@ end
 function placeBlocksToBeBorn()
   for k, pos in pairs(blocksToBeBorn) do
     -- Here, We need to place all of the blocks that we have queued
-    minetest.set_node(pos, {name = lifeBlock})
+    minetest.set_node(pos, {name = LIFEBLOCK})
     -- And add those blocks positions to lifeBlocks
     table.insert(lifeBlocks, pos)
   end
@@ -152,7 +155,7 @@ function findAirNeighbors()
         local posOffset = {x = pos.x + x_offset, y = pos.y, z = pos.z + z_offset}
         local node = minetest.get_node(posOffset)
         -- in this loop is all neighbors
-        if not (node.name == lifeBlock) then -- air only (for now)
+        if not (node.name == LIFEBLOCK) then -- air only (for now)
           local alreadyAdded = false
           for k, pos in pairs(airNeighborsList) do --loop through table of air_neighbors
             if vector.equals(pos, posOffset) then -- make sure it's not already in there
@@ -184,9 +187,8 @@ minetest.register_node(
 -- Event that adds lifeBlocks to table on placements of lifeBlocks
 minetest.register_on_placenode(
   function(pos, newnode, placer, oldnode, itemstack, pointed_thing)
-    if newnode.name == lifeBlock then
+    if newnode.name == LIFEBLOCK then
       table.insert(lifeBlocks, pos)
-      --findAirNeighbors() --a: why was this here
       local meta = minetest.get_meta(pos)
       meta:set_string("infotext", "LifeBlock placed by player")
     -- placer:get_player_name()
@@ -200,7 +202,7 @@ minetest.register_lbm(
     label = "Count existing lifeblocks",
 --  ^ Descriptive label for profiling purposes (optional).
     name = "viralblocks:countblocks", -- countblocks is a dummy (a: huh? this is our LBM's name)
-    nodenames = {lifeBlock},
+    nodenames = {LIFEBLOCK},
     run_at_every_load = true,
 --  ^ Whether to run the LBM's action every time a block gets loaded,
 --    and not just for blocks that were saved last time before LBMs were
@@ -216,7 +218,7 @@ minetest.register_lbm(
 -- >adroit says: What if it's destroyed by a non-player?
 minetest.register_on_dignode(
   function(pos, oldnode, digger)
-    if oldnode.name == lifeBlock then
+    if oldnode.name == LIFEBLOCK then
       for k, v in pairs(lifeBlocks) do
         if v.x == pos.x and v.y == pos.y and v.z == pos.z then
           table.remove(lifeBlocks, k)
@@ -258,10 +260,10 @@ function commandResponse(name, param)
     elseif param == "nextgen" then
       manualAdvance()
     elseif param == "pause" then
-      paused = true
+      isPaused = true
       say("CGOL board paused globally!")
     elseif param == "resume" then
-      paused = false
+      isPaused = false
       say("CGOL board resumed globally!")
     elseif param == "info" then
       showInfo()
