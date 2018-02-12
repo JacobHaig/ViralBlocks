@@ -92,7 +92,7 @@ function nextGeneration()
     log("no_action", "Nothing to do!")
   end
   gen = gen + 1
-  debugView(visDebug, showingLife)
+  debugView(visDebug, showingLife) -- HACK <-- perfictly fine
 end
 
 
@@ -140,7 +140,7 @@ function findBlocksToBeBorn()
     if countLifeNeighbors(pos) == 3 then
       log("born", "Found three neighbors!")
       -- Add blocks with exactly three live neighbors to blocksToBeBorn
-      table.insert(blocksToBeBorn, pos)
+      table.insert(blocksToBeBorn, k, pos)
       numberFound = numberFound + 1
     end
   end
@@ -156,7 +156,7 @@ function findBlocksToDie()
     -- Checks for two or three live neighbors - if not, mark for removal
     count = countLifeNeighbors(pos)
     if count < 2 or count > 3 then
-      table.insert(blocksToDie, pos)
+      table.insert(blocksToDie, k, pos)
       numberFound = numberFound + 1
     end
   end
