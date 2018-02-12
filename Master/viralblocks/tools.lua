@@ -2,7 +2,7 @@
 say = minetest.chat_send_all
 
 function log(tag, msg)
-  if debugTags[tag] then
+  if DEBUG_TAGS[tag] then
     say(msg)
   end
 end

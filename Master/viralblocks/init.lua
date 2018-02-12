@@ -12,6 +12,8 @@
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+-- non-lua conventions used here: camelCase names
+
 local tools = dofile(minetest.get_modpath("viralblocks") .. "/tools.lua")
 
 -- say = say
@@ -20,7 +22,7 @@ local tools = dofile(minetest.get_modpath("viralblocks") .. "/tools.lua")
 -- glassify = tools.glassify
 
 
---constants
+
 LIFEBLOCK = "viralblocks:lifeblock"
 DELAY_SECONDS = 5
 
@@ -32,7 +34,7 @@ visDebug = false
 showingLife = false
 makeChanges = true
 STEP = true -- false for debugging
-debugTags = {"passes" = true}
+DEBUG_TAGS = {passes = true, no_action = true}
 
 --------------------------------------------------------------------------------
 -- Lists -----------------------------------------------------------------------
@@ -44,6 +46,8 @@ blocksToDie = {}
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
+
+-- TODO make everything local, lol
 
 -- THE MAIN LOOP, automatic
 local timer = 0
@@ -74,13 +78,14 @@ function nextGeneration()
   findAirNeighbors()
   numBlocksToBeBorn = findBlocksToBeBorn()
   numBlocksToDie = findBlocksToDie()
-  say("Pass ".. gen ..", #:" .. tableLength(lifeBlocks) .. ", (+" .. numBlocksToBeBorn.. ", -" .. numBlocksToDie .. ")")
+  log("passes", "Scanning gen ".. gen ..". Pop:" .. tableLength(lifeBlocks) .. ", Change: (+" .. numBlocksToBeBorn.. ", -" .. numBlocksToDie .. ")")
 
   -- then do changes to world, if enabled
   if numBlocksToBeBorn + numBlocksToDie > 0 and makeChanges then
-    say("Processing changes...")
       placeBlocksToBeBorn()
-      removeBlocksToDie()
+      -- removeBlocksToDie()
+  else
+    log("no-action", "Nothing to do!")
   end
   gen = gen + 1
 end
@@ -125,6 +130,7 @@ function findBlocksToBeBorn()
     if countLifeNeighbors(pos) == 3 then
       -- Add blocks with exactly three live neighbors to blocksToBeBorn
       table.insert(blocksToBeBorn, pos)
+      found = found + 1
     end
   end
   return found
@@ -175,7 +181,7 @@ end
 
 -- Creating the lifeBlock
 minetest.register_node(
-  lifeBlock,
+  LIFEBLOCK,
   {
     description = "Populated (Alive) Cell of Conway's Game of Life",
     tiles = {"ViralBlocks_LifeBlock.png"},
