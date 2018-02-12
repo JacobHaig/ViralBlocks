@@ -29,6 +29,7 @@ visDebug = false
 showingLife = false
 makeChanges = true
 STEP = true -- false for debugging
+debugTags = {"passes" = true}
 
 --------------------------------------------------------------------------------
 -- Lists -----------------------------------------------------------------------
@@ -64,9 +65,9 @@ minetest.register_globalstep(
 
 function nextGeneration()
   -- efficiency note: nextGeneration() should only be called when there are lifeblocks (tableLength(lifeBlocks) ~= 0).
-  say("Pass " .. gen)
 
-  --first do harmless counting, no changes to the world
+  --first do harmless counting, no changes to the world.
+  --This comes first because we want the most up-to-date lists before making changes
   findAirNeighbors()
   numBlocksToBeBorn = findBlocksToBeBorn()
   numBlocksToDie = findBlocksToDie()
@@ -78,7 +79,6 @@ function nextGeneration()
       placeBlocksToBeBorn()
       removeBlocksToDie()
   end
-
   gen = gen + 1
 end
 
@@ -186,7 +186,7 @@ minetest.register_on_placenode(
   function(pos, newnode, placer, oldnode, itemstack, pointed_thing)
     if newnode.name == lifeBlock then
       table.insert(lifeBlocks, pos)
-      findAirNeighbors()
+      --findAirNeighbors() --a: why was this here
       local meta = minetest.get_meta(pos)
       meta:set_string("infotext", "LifeBlock placed by player")
     -- placer:get_player_name()

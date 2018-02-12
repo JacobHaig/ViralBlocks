@@ -1,6 +1,12 @@
 -- Easier function to print stuff
 say = minetest.chat_send_all
 
+function log(tag, msg)
+  if debugTags[tag] then
+    say(msg)
+  end
+end
+
 -- Returns the number of elements in the table
 function tableLength(Table)
   local count = 0
