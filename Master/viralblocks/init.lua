@@ -175,8 +175,8 @@ function findAirNeighbors()
         -- in this loop is all neighbors
         if not (node.name == LIFEBLOCK) then -- air only (for now)
           local alreadyAdded = false
-          for k, pos in pairs(airNeighborsList) do --loop through table of air_neighbors
-            if vector.equals(pos, posOffset) then -- make sure it's not already in there
+          for m, pos2 in pairs(airNeighborsList) do --loop through table of air_neighbors
+            if vector.equals(pos2, posOffset) then -- make sure it's not already in there
               alreadyAdded = true
             end
           end
