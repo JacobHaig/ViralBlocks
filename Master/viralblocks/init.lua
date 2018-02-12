@@ -62,6 +62,7 @@ minetest.register_globalstep(
 
         if tableLength(lifeBlocks) ~= 0 then  -- TODO: make isTableEmpty() so we don't inefficiently count past one
           nextGeneration()
+          debugView(visDebug, showingLife)
         end
 
         timer = 0
@@ -89,7 +90,6 @@ function nextGeneration()
     removeBlocksToDie()
   else
     log("no_action", "Nothing to do!")
-    debugView(visDebug, showingLife)
   end
 
   gen = gen + 1

@@ -33,13 +33,6 @@ function glassify()
   end
 end
 
--- If true return "true" else "false"
-function isitTrue(isTrue)
-  if isTrue then
-    return "true"
-  end
-  return "false"
-end
 
 -- Shows glass for all the selected Blocks
 function debugView(visDebug, showingLife)
